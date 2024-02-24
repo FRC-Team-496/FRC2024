@@ -16,8 +16,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.Camera;
 import frc.robot.subsystems.DriveSubsystem;
-import frc.robot.subsystems.ElevatorSubsystem;
+//import frc.robot.subsystems.ElevatorSubsystem;
+import frc.robot.subsystems.Input;
 import frc.robot.subsystems.NavX;
+import frc.robot.subsystems.Output;
+import frc.robot.subsystems.SALUS;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -41,9 +44,12 @@ public class RobotContainer {
     
   // The robot's subsystems
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
-  private final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
+  //private final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
   private final Camera m_camera = new Camera();
   private final NavX m_gyro = new NavX();
+  private final SALUS m_salus = new SALUS();
+  private final Output m_output = new Output();
+  private final Input m_input = new Input();
   private SendableChooser<Integer> m_chooser = new SendableChooser<Integer>(); 
 
 
@@ -82,10 +88,10 @@ public class RobotContainer {
             m_robotDrive)
             );
         
-        m_elevator.setDefaultCommand(
-            new RunCommand(
-                () -> m_elevator.drive(MathUtil.applyDeadband(-m_driverController2.getRawAxis(1), 0.2)), m_elevator)
-                );
+        // m_elevator.setDefaultCommand(
+        //     new RunCommand(
+        //         () -> m_elevator.drive(MathUtil.applyDeadband(-m_driverController2.getRawAxis(1), 0.2)), m_elevator)
+        //         );
                 
         m_gyro.setDefaultCommand(
             new RunCommand(
@@ -132,7 +138,31 @@ public class RobotContainer {
             () -> m_robotDrive.setX(),
             m_robotDrive));
 
+    new JoystickButton(m_driverController, 1)
+    .whileTrue(new RunCommand(
+            () -> m_robotDrive.drive(0, m_salus.calcX(), m_salus.calcYaw() / 2, false, 0.3), 
+            m_robotDrive));
 
+    new JoystickButton(m_driverController, 1)
+    .whileTrue(new InstantCommand(
+            () -> m_salus.set()));
+
+    new JoystickButton(m_driverController2, 1)
+    .whileTrue(new RunCommand(
+            () -> m_output.shoot()));
+
+    new JoystickButton(m_driverController2, 2)
+    .whileTrue(new RunCommand(
+            () -> m_input.suck()));
+
+    new JoystickButton(m_driverController2, 1)
+    .whileFalse(new RunCommand(
+            () -> m_output.stop()));
+
+    new JoystickButton(m_driverController2, 2)
+    .whileFalse(new InstantCommand(
+            () -> m_input.stop()));
+        
     
     
     m_chooser.addOption("Drop and slide", 3);
@@ -206,7 +236,7 @@ public class RobotContainer {
   private RunCommand m_slow1 = new RunCommand(() -> m_robotDrive.drive(.30, 0, 0, false, 0.1), m_robotDrive);
   private RunCommand m_slow2 = new RunCommand(() -> m_robotDrive.drive(-.16, 0, 0, false, 0.1), m_robotDrive);
   private RunCommand m_backward = new RunCommand(() -> m_robotDrive.drive(-.7, 0, 0, false, 0.3), m_robotDrive);
-  private RunCommand m_elevatorDown = new RunCommand(() -> m_elevator.drive(.8), m_elevator);
+  //private RunCommand m_elevatorDown = new RunCommand(() -> m_elevator.drive(.8), m_elevator);
   private RunCommand m_slideRight = new RunCommand(() -> m_robotDrive.drive(0, .6, 0, false, 0.3), m_robotDrive);
   public void autoInnit(){
     state=0;
@@ -226,10 +256,10 @@ public class RobotContainer {
             startTime = System.currentTimeMillis();
             state = 1;
         case(1):
-            m_elevatorDown.schedule();
+            //m_elevatorDown.schedule();
             System.out.println(System.currentTimeMillis() - startTime);
             if(System.currentTimeMillis() - startTime >= 2800){
-                CommandScheduler.getInstance().cancel(m_elevatorDown);
+                //CommandScheduler.getInstance().cancel(m_elevatorDown);
                 startTime = System.currentTimeMillis();
                 state = 2;
             }

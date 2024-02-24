@@ -7,6 +7,10 @@ import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
 public class Camera extends SubsystemBase {
+    private static double statX;
+    private static double statYaw;
+    private static double statY;
+
 
     public void startCamera() {
         NetworkTable table = NetworkTableInstance.getDefault().getTable("limelight");
@@ -17,9 +21,12 @@ public class Camera extends SubsystemBase {
 
         //read values periodically
         double x = tx.getDouble(0.0);
+        statX = x;
         double y = ty.getDouble(0.0);
+        statY = y;
         double area = ta.getDouble(0.0);
         double[] bot = botpose.getDoubleArray(new double[6]);
+        statYaw = bot[5];
 
         //post to smart dashboard periodically
         SmartDashboard.putNumber("LimelightX", x);
@@ -33,7 +40,15 @@ public class Camera extends SubsystemBase {
         SmartDashboard.putNumber("LimelightBotYaw", bot[5]);
     }
 
-    public void autoAlign(){
+    public static double getX(){
+        return statX;
+    }
 
+    public static double getYaw(){
+        return statYaw;
+    }
+
+    public static double getY(){
+        return statY;
     }
 }
