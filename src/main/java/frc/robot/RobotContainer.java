@@ -148,7 +148,7 @@ public class RobotContainer {
             () -> m_salus.set()));
 
     new JoystickButton(m_driverController2, 1)
-    .whileTrue(new RunCommand(
+    .whileTrue(new InstantCommand(
             () -> m_output.shoot()));
 
     new JoystickButton(m_driverController2, 2)
@@ -156,7 +156,7 @@ public class RobotContainer {
             () -> m_input.suck()));
 
     new JoystickButton(m_driverController2, 1)
-    .whileFalse(new RunCommand(
+    .whileFalse(new InstantCommand(
             () -> m_output.stop()));
 
     new JoystickButton(m_driverController2, 2)
