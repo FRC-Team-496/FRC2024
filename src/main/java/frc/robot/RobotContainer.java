@@ -152,7 +152,7 @@ public class RobotContainer {
             () -> m_output.shoot()));
 
     new JoystickButton(m_driverController2, 2)
-    .whileTrue(new RunCommand(
+    .whileTrue(new InstantCommand(
             () -> m_input.suck()));
 
     new JoystickButton(m_driverController2, 1)
@@ -231,119 +231,38 @@ public class RobotContainer {
   }
 
   int state = 0;
+  double mode;
+  int intmode;
   double startTime = System.currentTimeMillis();
   private RunCommand m_forward = new RunCommand(() -> m_robotDrive.drive(.6, 0, 0, false, 0.3), m_robotDrive);
   private RunCommand m_slow1 = new RunCommand(() -> m_robotDrive.drive(.30, 0, 0, false, 0.1), m_robotDrive);
   private RunCommand m_slow2 = new RunCommand(() -> m_robotDrive.drive(-.16, 0, 0, false, 0.1), m_robotDrive);
   private RunCommand m_backward = new RunCommand(() -> m_robotDrive.drive(-.7, 0, 0, false, 0.3), m_robotDrive);
-  //private RunCommand m_elevatorDown = new RunCommand(() -> m_elevator.drive(.8), m_elevator);
+  //private RunCommand m_elevatorDown = new RunCommand(() -> m_eflevator.drive(.8), m_elevator);
   private RunCommand m_slideRight = new RunCommand(() -> m_robotDrive.drive(0, .6, 0, false, 0.3), m_robotDrive);
   public void autoInnit(){
     state=0;
+    mode = SmartDashboard.getNumber("Autonomous Mode", 1.0);
+    System.out.println(mode);
+    intmode = (int) mode;
+    startTime = System.currentTimeMillis();
   }
   public void autonomousPeriodic(){
     AHRS gyro = m_gyro.gyro();
     
     //commands
-    //RunCommand forward = new RunCommand(() -> m_robotDrive.drive(.6, 0, 0, false, 0.3), m_robotDrive);
-    //RunCommand slow1 = new RunCommand(() -> m_robotDrive.drive(.15, 0, 0, false, 0.1), m_robotDrive);
-    //RunCommand slow2 = new RunCommand(() -> m_robotDrive.drive(-.15, 0, 0, false, 0.1), m_robotDrive);
-    //RunCommand backward = new RunCommand(() -> m_robotDrive.drive(-.6, 0, 0, false, 0.3), m_robotDrive);
-    //RunCommand elevatorDown = new RunCommand(() -> m_elevator.drive(.6), m_elevator);
+    RunCommand forward = new RunCommand(() -> m_robotDrive.drive(.6, 0, 0, false, 0.3), m_robotDrive);
     
-    switch(state){
-        case(0):
-            startTime = System.currentTimeMillis();
-            state = 1;
-        case(1):
-            //m_elevatorDown.schedule();
+        switch(intmode) {
+            case(1):
+            m_forward.schedule();
             System.out.println(System.currentTimeMillis() - startTime);
-            if(System.currentTimeMillis() - startTime >= 2800){
-                //CommandScheduler.getInstance().cancel(m_elevatorDown);
-                startTime = System.currentTimeMillis();
-                state = 2;
+            if(System.currentTimeMillis() - startTime > 1000){
+                CommandScheduler.getInstance().cancel(m_forward);
             }
             break;
-        case(2):
-            //m_forward.schedule();
-            //if(System.currentTimeMillis() - startTime >= 550){
-                //CommandScheduler.getInstance().cancel(m_forward);
-                gyro.resetDisplacement();
-                startTime = System.currentTimeMillis();
-                state = 3;
-           // }
-            break;
-        case(3):
-            m_backward.schedule();
-            if(m_chooser.getSelected() == 2) {
-                // Do balance
-                state = 4;
-            }
-            else if(m_chooser.getSelected()==3){
-                //slide
-                if(System.currentTimeMillis() - startTime >= 250){
-                    CommandScheduler.getInstance().cancel(m_backward);
-                    startTime = System.currentTimeMillis();
-                    state=7;
-                }
-            }
-            else {
-                // Just back up.
-                if(System.currentTimeMillis() - startTime >= 2500){
-                    CommandScheduler.getInstance().cancel(m_backward);
-                }
-            }      
-            break;
-        case(4):
-            if(Math.abs(m_gyro.pitch()) > 10){
-                state = 5;
-                CommandScheduler.getInstance().cancel(m_backward);
-            }
-            break;
-        case(5):
-            if(m_gyro.pitch() > 3){
-                CommandScheduler.getInstance().cancel(m_slow2);
-                m_slow1.schedule();
-                startTime = System.currentTimeMillis();
-                state=6;
-            }
-            else if(m_gyro.pitch() < -3){
-                CommandScheduler.getInstance().cancel(m_slow1);
-                m_slow2.schedule();
-                
-            } else {
-                CommandScheduler.getInstance().cancel(m_backward);
-                CommandScheduler.getInstance().cancel(m_slow2);
-                CommandScheduler.getInstance().cancel(m_slow1);
-            }
-            break;
-            
-        case(6):
-        if(System.currentTimeMillis() - startTime >= 500){
-        CommandScheduler.getInstance().cancel(m_backward);
-                CommandScheduler.getInstance().cancel(m_slow2);
-                CommandScheduler.getInstance().cancel(m_slow1);
-
         }
-        break;
-        case(7):
-            m_slideRight.schedule();
-            if(System.currentTimeMillis() - startTime >= 1500){
-                CommandScheduler.getInstance().cancel(m_slideRight);
-                startTime = System.currentTimeMillis();
-                state=8;
-            }
-            break;
-        case(8):
-        m_backward.schedule();
-            // Just back up.
-            if(System.currentTimeMillis() - startTime >= 2500){
-                CommandScheduler.getInstance().cancel(m_backward);
-            }
-        break;
-
-  }
-}
+    }
 }
 
 

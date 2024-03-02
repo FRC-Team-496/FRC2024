@@ -18,6 +18,7 @@ public class Camera extends SubsystemBase {
         NetworkTableEntry ty = table.getEntry("ty");
         NetworkTableEntry ta = table.getEntry("ta");
         NetworkTableEntry botpose = table.getEntry("botpose");
+        NetworkTableEntry pipeline = table.getEntry("pipeline");
 
         //read values periodically
         double x = tx.getDouble(0.0);
@@ -38,6 +39,18 @@ public class Camera extends SubsystemBase {
         SmartDashboard.putNumber("LimelightBotRoll", bot[3]);
         SmartDashboard.putNumber("LimelightBotPitch", bot[4]);
         SmartDashboard.putNumber("LimelightBotYaw", bot[5]);
+
+        //checks team and selects pipeline
+        int team = (int) SmartDashboard.getNumber("Team", 0.0);
+        if(team == 1){
+            pipeline.setNumber(1);
+        }
+        else if(team == 2){
+            pipeline.setNumber(2);
+        }
+        else{
+            pipeline.setNumber(0);
+        }
     }
 
     public static double getX(){
