@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Input extends SubsystemBase{
 
     CANSparkMax m_motor;
-    private double speed = .7;
+    private double speed = 1;
     DigitalInput m_limmitTop;
     DigitalInput m_limmitBottom;
     SparkMaxPIDController m_pidController;

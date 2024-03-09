@@ -24,10 +24,14 @@ import frc.robot.subsystems.SALUS;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelDeadlineGroup;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
-
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import java.util.Date;
+
 
 
 
@@ -88,6 +92,10 @@ public class RobotContainer {
             m_robotDrive)
             );
         
+      m_output.setDefaultCommand(new RunCommand(() -> m_output.stop(), m_output));
+
+      m_input.setDefaultCommand(new RunCommand(() -> m_input.stop(), m_input));
+
         // m_elevator.setDefaultCommand(
         //     new RunCommand(
         //         () -> m_elevator.drive(MathUtil.applyDeadband(-m_driverController2.getRawAxis(1), 0.2)), m_elevator)
@@ -130,6 +138,51 @@ public class RobotContainer {
    */
 
    
+
+
+  public class moveBack extends Command{
+    double startX;
+    DriveSubsystem m_robotDrive;
+    private double distance; // in meters
+    public moveBack(DriveSubsystem m_robotDrive, double distance){
+      this.m_robotDrive = m_robotDrive;
+      this.distance = distance;
+    }
+
+
+    @Override
+    public void initialize() {
+      startX = m_robotDrive.getPose().getX();
+    }
+
+    @Override
+    public void execute() {
+      m_robotDrive.drive(-.05, 0.0, 0.0, false, .3); //-.02
+    }
+
+    @Override
+    public boolean isFinished() {
+        return Math.abs(m_robotDrive.getPose().getX() - startX) > (distance / 1.31);  //.045   .9
+    }
+
+  }
+
+  private Command getShootTime(double time){
+    WaitCommand wait = new WaitCommand(time);
+    RunCommand shoot = new RunCommand(() -> m_output.shoot(), m_output);
+    InstantCommand stop = new InstantCommand(() -> m_output.stop(), m_output);
+    RunCommand suck = new RunCommand(() -> m_input.suck(), m_input);
+    InstantCommand stopSuck = new InstantCommand(() -> m_input.stop(), m_input);
+    ParallelDeadlineGroup waitShoot = new ParallelDeadlineGroup(wait, shoot, suck);
+    ParallelCommandGroup stopAll = new ParallelCommandGroup(stop, stopSuck);
+    return new SequentialCommandGroup(waitShoot, stopAll);
+  }
+
+
+
+
+
+
   private void configureButtonBindings() {
 
     //IDK what this is
@@ -147,21 +200,26 @@ public class RobotContainer {
     .whileTrue(new InstantCommand(
             () -> m_salus.set()));
 
+    new JoystickButton(m_driverController, 2) 
+      .whileTrue(new SequentialCommandGroup(new moveBack(m_robotDrive, .045), getShootTime(2.0))); // new moveBack(m_robotDrive, .045)
+
     new JoystickButton(m_driverController2, 1)
     .whileTrue(new InstantCommand(
-            () -> m_output.shoot()));
+            () -> m_output.shoot(), m_output));
 
     new JoystickButton(m_driverController2, 2)
     .whileTrue(new InstantCommand(
-            () -> m_input.suck()));
+            () -> m_input.suck(), m_input));
 
     new JoystickButton(m_driverController2, 1)
     .whileFalse(new InstantCommand(
-            () -> m_output.stop()));
+            () -> m_output.stop(), m_output));
 
     new JoystickButton(m_driverController2, 2)
     .whileFalse(new InstantCommand(
-            () -> m_input.stop()));
+            () -> m_input.stop(), m_input));
+
+    
         
     
     
@@ -265,7 +323,6 @@ public class RobotContainer {
               }
               break;
 
-            case(69420): // Proof of concept, just tesing out
               
         }
     }

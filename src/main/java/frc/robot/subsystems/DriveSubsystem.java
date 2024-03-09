@@ -16,6 +16,7 @@ import frc.robot.Constants.DriveConstants;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 //Imported to get IMUAxis
 import edu.wpi.first.wpilibj.ADIS16470_IMU.IMUAxis;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class DriveSubsystem extends SubsystemBase {
 
@@ -48,7 +49,7 @@ public class DriveSubsystem extends SubsystemBase {
   // Odometry class for tracking robot pose
   SwerveDriveOdometry m_odometry = new SwerveDriveOdometry(
       DriveConstants.kDriveKinematics,
-      // No clue if this works but I looked into it and put this to get IMUAxis and fill missing parameter requirement, haven't done on all other since I want to check if it is correct first.
+      
       
       Rotation2d.fromDegrees(m_gyro.getAngle(IMUAxis.kYaw)), 
       new SwerveModulePosition[] {
@@ -115,6 +116,11 @@ public class DriveSubsystem extends SubsystemBase {
     xSpeed *= DriveConstants.kMaxSpeedMetersPerSecond*this.throttle;
     ySpeed *= DriveConstants.kMaxSpeedMetersPerSecond*this.throttle;
     rot *= DriveConstants.kMaxAngularSpeed*this.throttle;
+
+    
+    SmartDashboard.putNumber("RobotPositionX", m_odometry.getPoseMeters().getX());
+    SmartDashboard.putNumber("RobotPositionY", m_odometry.getPoseMeters().getY());
+
 
     var swerveModuleStates = DriveConstants.kDriveKinematics.toSwerveModuleStates(
         fieldRelative

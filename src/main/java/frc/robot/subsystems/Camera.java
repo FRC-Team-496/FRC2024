@@ -40,6 +40,8 @@ public class Camera extends SubsystemBase {
         SmartDashboard.putNumber("LimelightBotPitch", bot[4]);
         SmartDashboard.putNumber("LimelightBotYaw", bot[5]);
 
+       
+
         //checks team and selects pipeline
         int team = (int) SmartDashboard.getNumber("Team", 0.0);
         if(team == 1){
