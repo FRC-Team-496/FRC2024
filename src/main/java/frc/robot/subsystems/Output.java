@@ -14,7 +14,7 @@ public class Output extends SubsystemBase{
     CANSparkMax m_motor2;
     CANSparkMax m_motor3;
     CANSparkMax m_motor4;
-    private double speed = .7;
+    private double speed = .2;
     //SparkPIDController m_pidController1;
     //SparkPIDController m_pidController2;
     //SparkPIDController m_pidController3;

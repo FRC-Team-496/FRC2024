@@ -247,6 +247,9 @@ public class RobotContainer {
     intmode = (int) mode;
     startTime = System.currentTimeMillis();
   }
+
+
+
   public void autonomousPeriodic(){
     AHRS gyro = m_gyro.gyro();
     
@@ -255,12 +258,15 @@ public class RobotContainer {
     
         switch(intmode) {
             case(1):
-            m_forward.schedule();
-            System.out.println(System.currentTimeMillis() - startTime);
-            if(System.currentTimeMillis() - startTime > 1000){
-                CommandScheduler.getInstance().cancel(m_forward);
-            }
-            break;
+              m_forward.schedule();
+              System.out.println(System.currentTimeMillis() - startTime);
+              if(System.currentTimeMillis() - startTime > 1000){
+                  CommandScheduler.getInstance().cancel(m_forward);
+              }
+              break;
+
+            case(69420): // Proof of concept, just tesing out
+              
         }
     }
 }
