@@ -15,8 +15,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants.OIConstants;
 import frc.robot.subsystems.Camera;
+import frc.robot.subsystems.Climbers;
 import frc.robot.subsystems.DriveSubsystem;
-//import frc.robot.subsystems.ElevatorSubsystem;
 import frc.robot.subsystems.Input;
 import frc.robot.subsystems.NavX;
 import frc.robot.subsystems.Output;
@@ -48,12 +48,12 @@ public class RobotContainer {
     
   // The robot's subsystems
   private final DriveSubsystem m_robotDrive = new DriveSubsystem();
-  //private final ElevatorSubsystem m_elevator = new ElevatorSubsystem();
   private final Camera m_camera = new Camera();
   private final NavX m_gyro = new NavX();
   private final SALUS m_salus = new SALUS();
   private final Output m_output = new Output();
   private final Input m_input = new Input();
+  private final Climbers m_climbers = new Climbers();
   private SendableChooser<Integer> m_chooser = new SendableChooser<Integer>(); 
 
 
@@ -96,11 +96,7 @@ public class RobotContainer {
 
       m_input.setDefaultCommand(new RunCommand(() -> m_input.stop(), m_input));
 
-        // m_elevator.setDefaultCommand(
-        //     new RunCommand(
-        //         () -> m_elevator.drive(MathUtil.applyDeadband(-m_driverController2.getRawAxis(1), 0.2)), m_elevator)
-        //         );
-                
+        m_climbers.setDefaultCommand(new RunCommand(() -> m_climbers.stop(), m_climbers));        
         m_gyro.setDefaultCommand(
             new RunCommand(
             () -> m_gyro.putGyro()    
@@ -167,9 +163,9 @@ public class RobotContainer {
 
   }
 
-  private Command getShootTime(double time){
+  private Command getShootTime(double time, double speed){
     WaitCommand wait = new WaitCommand(time);
-    RunCommand shoot = new RunCommand(() -> m_output.shoot(), m_output);
+    RunCommand shoot = new RunCommand(() -> m_output.shoot(speed), m_output);
     InstantCommand stop = new InstantCommand(() -> m_output.stop(), m_output);
     RunCommand suck = new RunCommand(() -> m_input.suck(), m_input);
     InstantCommand stopSuck = new InstantCommand(() -> m_input.stop(), m_input);
@@ -185,30 +181,33 @@ public class RobotContainer {
 
   private void configureButtonBindings() {
 
-    //IDK what this is
+    
     new JoystickButton(m_driverController, Button.kR1.value)
         .whileTrue(new RunCommand(
             () -> m_robotDrive.setX(),
             m_robotDrive));
 
-    new JoystickButton(m_driverController, 1)
+    new JoystickButton(m_driverController, 1) //SALUS
     .whileTrue(new RunCommand(
             () -> m_robotDrive.drive(0, m_salus.calcX(), m_salus.calcYaw() / 2, false, 0.3), 
             m_robotDrive));
 
-    new JoystickButton(m_driverController, 1)
+    new JoystickButton(m_driverController, 1) 
     .whileTrue(new InstantCommand(
             () -> m_salus.set()));
 
-    new JoystickButton(m_driverController, 2) 
-      .whileTrue(new SequentialCommandGroup(new moveBack(m_robotDrive, .045), getShootTime(2.0))); // new moveBack(m_robotDrive, .045)
+    new JoystickButton(m_driverController2, 2) // move back and shoot to small goal m_robotDrive, .045
+      .whileTrue(new SequentialCommandGroup(new moveBack(m_robotDrive, .045), getShootTime(2.0, .22))); // new moveBack(m_robotDrive, .045)
 
-    new JoystickButton(m_driverController2, 1)
-    .whileTrue(new InstantCommand(
-            () -> m_output.shoot(), m_output));
+    new JoystickButton(m_driverController2, 1) // move back and shoot to big goal, need to figure out keybinds
+      .whileTrue(new SequentialCommandGroup(new moveBack(m_robotDrive, .61), getShootTime(2.0, .7)));
 
-    new JoystickButton(m_driverController2, 2)
-    .whileTrue(new InstantCommand(
+    new JoystickButton(m_driverController2, 5) //shoot
+    .whileTrue(new RunCommand(
+            () -> m_output.shoot(.7), m_output)); //speed set to the long goal speed since thats the one we may eyeball
+
+    new JoystickButton(m_driverController2, 3) //suck
+    .whileTrue(new RunCommand(
             () -> m_input.suck(), m_input));
 
     new JoystickButton(m_driverController2, 1)
@@ -218,6 +217,19 @@ public class RobotContainer {
     new JoystickButton(m_driverController2, 2)
     .whileFalse(new InstantCommand(
             () -> m_input.stop(), m_input));
+
+    new JoystickButton(m_driverController, 5)
+    .whileTrue(new RunCommand(
+            () -> m_climbers.extend(1), m_climbers));
+    new JoystickButton(m_driverController, 3)
+    .whileTrue(new RunCommand(
+            () -> m_climbers.extend(-1), m_climbers));
+    // new JoystickButton(m_driverController, 3)
+    // .whileFalse(new InstantCommand(
+    //         () -> m_climbers.stop(), m_climbers));
+    // new JoystickButton(m_driverController, 5)
+    // .whileFalse(new InstantCommand(
+    //         () -> m_climbers.stop(), m_climbers));
 
     
         
@@ -293,17 +305,19 @@ public class RobotContainer {
   int intmode;
   double startTime = System.currentTimeMillis();
   private RunCommand m_forward = new RunCommand(() -> m_robotDrive.drive(.6, 0, 0, false, 0.3), m_robotDrive);
-  private RunCommand m_slow1 = new RunCommand(() -> m_robotDrive.drive(.30, 0, 0, false, 0.1), m_robotDrive);
-  private RunCommand m_slow2 = new RunCommand(() -> m_robotDrive.drive(-.16, 0, 0, false, 0.1), m_robotDrive);
-  private RunCommand m_backward = new RunCommand(() -> m_robotDrive.drive(-.7, 0, 0, false, 0.3), m_robotDrive);
-  //private RunCommand m_elevatorDown = new RunCommand(() -> m_eflevator.drive(.8), m_elevator);
-  private RunCommand m_slideRight = new RunCommand(() -> m_robotDrive.drive(0, .6, 0, false, 0.3), m_robotDrive);
+  private RunCommand m_backwards = new RunCommand(() -> m_robotDrive.drive(-.6, 0, 0, false, 0.3), m_robotDrive);
+  private RunCommand m_lineUp = new RunCommand(() -> m_robotDrive.drive(0, m_salus.calcX(), m_salus.calcYaw() / 2, false, 0.3));
+  private RunCommand m_shoot = new RunCommand(() -> m_output.shoot(.7));
+  private RunCommand m_suck = new RunCommand(() -> m_input.suck());
+  private RunCommand m_amp = new RunCommand(() -> new SequentialCommandGroup(new moveBack(m_robotDrive, .045), getShootTime(2.0, .22)));
+
   public void autoInnit(){
     state=0;
     mode = SmartDashboard.getNumber("Autonomous Mode", 1.0);
     System.out.println(mode);
     intmode = (int) mode;
     startTime = System.currentTimeMillis();
+    m_salus.set();
   }
 
 
@@ -312,18 +326,34 @@ public class RobotContainer {
     AHRS gyro = m_gyro.gyro();
     
     //commands
-    RunCommand forward = new RunCommand(() -> m_robotDrive.drive(.6, 0, 0, false, 0.3), m_robotDrive);
+    //RunCommand forward = new RunCommand(() -> m_robotDrive.drive(.6, 0, 0, false, 0.3), m_robotDrive);
     
         switch(intmode) {
             case(1):
-              m_forward.schedule();
-              System.out.println(System.currentTimeMillis() - startTime);
+              m_backwards.schedule();
               if(System.currentTimeMillis() - startTime > 1000){
-                  CommandScheduler.getInstance().cancel(m_forward);
+                CommandScheduler.getInstance().cancel(m_backwards);
               }
               break;
-
+            case(2):
+              m_lineUp.schedule();
+              if(System.currentTimeMillis() - startTime > 1000 && System.currentTimeMillis() - startTime < 3000){
+                CommandScheduler.getInstance().cancel(m_lineUp);
+                m_suck.schedule();
+                m_shoot.schedule();
+              }
+              if(System.currentTimeMillis() - startTime > 3000 && System.currentTimeMillis() - startTime < 4000){
+                CommandScheduler.getInstance().cancel(m_suck);
+                CommandScheduler.getInstance().cancel(m_shoot);
+                m_backwards.schedule();
+              }
+              if(System.currentTimeMillis() - startTime > 4000){
+                CommandScheduler.getInstance().cancel(m_backwards);
+              }
+              break;
+            case(3):
               
+              break;
         }
     }
 }

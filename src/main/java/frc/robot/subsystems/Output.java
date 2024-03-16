@@ -14,7 +14,7 @@ public class Output extends SubsystemBase{
     CANSparkMax m_motor2;
     CANSparkMax m_motor3;
     CANSparkMax m_motor4;
-    private double speed = .22; 
+    //private double speed = .22; 
     //SparkPIDController m_pidController1;
     //SparkPIDController m_pidController2;
     //SparkPIDController m_pidController3;
@@ -35,7 +35,7 @@ public class Output extends SubsystemBase{
     // Encoder object created to display position values
     
    
-    public void shoot(){
+    public void shoot(double speed){
         m_motor1.set(speed);
         m_motor2.set(-speed);
         m_motor3.set(speed);
